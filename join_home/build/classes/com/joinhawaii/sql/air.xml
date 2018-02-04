@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="air">
+
+	<select id="select_AirList" parameterType="map" resultType="map">
+            select a.option_id
+                 , a.option_nm_kr
+                 , a.option_nm_eng
+                 , a.corp_cd
+                 , b.code_name as corp_nm
+                 , a.category_cd
+                 , c.code_name as category_nm
+                 , a.deposit
+                 , a.sales_mark
+                 , a.use_yn
+                 , a.ordering
+              from tb_join_option a
+                 , tb_join_code b
+                 , tb_join_code c
+             where a.corp_cd 	 = b.code and b.code_gubn = '003'
+               and a.category_cd = c.code and c.code_gubn = '114'
+               and a.option_gubn = 'A'
+             <if test="s_corp_cd != null and s_corp_cd != ''">
+               and a.corp_cd		= #{s_corp_cd}
+             </if>
+             <if test="s_category_cd != null and s_category_cd != ''">
+               and a.category_cd 		= #{s_category_cd}
+             </if>
+             order by a.use_yn desc
+                    , a.ordering
+             		, c.sort_flag
+                    , a.option_nm_eng
+	</select>
+
+	<insert id="insert_AirInfo" parameterType="map">
+            insert
+              into tb_join_option (
+                   option_nm_kr
+                 , option_nm_eng
+                 , option_gubn
+                 , division_cd
+                 , corp_cd
+                 , category_cd
+                 , recommend_yn
+                 , weekly_deal_yn
+                 , use_yn
+                 , summ_info1
+                 , summ_info2
+                 , sales_mark
+                 , cancel_day
+                 , deposit
+                 , sales_title1
+                 , sales_title2
+                 , promotion_info
+                 , weekly_deal_info
+				 , default_info
+                 , caution_info1
+                 , caution_info2
+                 , regist_datetime 
+                 , regist_user
+            ) values (
+                   #{option_nm_kr}
+                 , #{option_nm_eng}
+                 , #{option_gubn}
+                 , #{division_cd}
+                 , #{corp_cd}
+                 , #{category_cd}
+                 , #{recommend_yn}
+                 , #{weekly_deal_yn}
+                 , #{use_yn}
+				 , #{summ_info1}
+                 , #{summ_info2}
+                 , #{sales_mark}
+                 , case #{cancel_day} when '' then 0 when NULL then 0 else #{cancel_day} end
+                 , case #{deposit} when '' then 0 when NULL then 0 else #{deposit} end
+                 , #{sales_title1}
+                 , #{sales_title2}
+                 , #{promotion_info}
+                 , #{weekly_deal_info}
+				 , #{default_info}
+                 , #{caution_info1}
+                 , #{caution_info2}
+                 , date_format(now(), '%Y%m%d%H%i%s')
+                 , #{regist_user}
+            )
+        <selectKey resultType="int" keyProperty="option_id" order="AFTER">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	<update id="update_AirImage" parameterType="map">
+			update tb_join_option
+			   set main_picture = #{main_picture}
+			 where option_id 	= #{option_id}
+	</update>
+
+	<update id="update_AirInfo" parameterType="map">
+			update tb_join_option
+			   set option_nm_kr     = #{option_nm_kr}
+                 , option_nm_eng    = #{option_nm_eng}
+                 , option_gubn      = #{option_gubn}
+                 , division_cd      = #{division_cd}
+                 , corp_cd          = #{corp_cd}
+				 , category_cd      = #{category_cd}
+                 , recommend_yn     = #{recommend_yn}
+                 , weekly_deal_yn   = #{weekly_deal_yn}
+                 , use_yn           = #{use_yn}
+                 , summ_info1       = #{summ_info1}
+                 , summ_info2       = #{summ_info2}
+                 , sales_mark       = #{sales_mark}                 
+                 , cancel_day       = case #{cancel_day} when '' then 0 when NULL then 0 else #{cancel_day} end
+                 , deposit          = case #{deposit} when '' then 0 when NULL then 0 else #{deposit} end 
+                 , sales_title1     = #{sales_title1}
+                 , sales_title2     = #{sales_title2}
+                 , promotion_info   = #{promotion_info}
+                 , weekly_deal_info = #{weekly_deal_info}
+                 , caution_info1    = #{caution_info1}
+                 , caution_info2    = #{caution_info2}
+		         , main_picture     = #{main_picture}
+		         , default_info     = #{default_info}
+                 , change_datetime  = date_format(now(), '%Y%m%d%H%i%s')
+                 , change_user      = #{change_user}
+           where option_id 		    = #{option_id}
+	</update>
+	
+ 	<delete id="delete_AirInfo" parameterType="map">
+            delete 
+              from tb_join_option
+             where option_id 		= #{option_id}
+ 	</delete>
+ 	
+	<select id="select_AirInfo" parameterType="map" resultType="map">
+            select a.option_id
+                 , a.option_nm_kr
+                 , a.option_nm_eng
+                 , concat(a.option_nm_kr, ' (', a.option_id, ')') as option_title
+                 , a.option_gubn
+                 , a.division_cd
+                 , a.corp_cd
+                 , b.code_name as corp_nm
+                 , a.category_cd
+                 , c.code_name as category_nm
+                 , a.recommend_yn
+                 , a.weekly_deal_yn
+                 , a.use_yn
+                 , a.summ_info1
+                 , a.summ_info2
+                 , a.sales_mark
+                 , a.cancel_day
+                 , a.deposit
+                 , a.main_picture
+                 , a.sales_title1
+                 , a.sales_title2
+                 , a.promotion_info
+                 , a.weekly_deal_info
+                 , a.caution_info1
+                 , a.caution_info2
+                 , a.default_info
+                 , c.code_desc as depart_nm
+                 , c.code_info as return_nm
+			  from tb_join_option a
+                 , tb_join_code b
+                 , tb_join_code c
+             where a.corp_cd 	 = b.code and b.code_gubn = '003'
+               and a.category_cd = c.code and c.code_gubn = '114'
+               and a.option_id	= #{option_id}     
+	</select>
+	
+	<insert id="insert_AirPriceList" parameterType="map">
+			insert into tb_join_airprice (
+						  option_id
+						, class_cd
+						, start_air_nm
+						, start_date
+						, start_airport
+						, start_depart_time
+						, start_arrive_time
+						, end_air_nm
+						, end_date
+						, end_airport
+						, end_depart_time
+						, end_arrive_time
+						, air_extra
+						, air_tax
+						, cost
+						, cost_total
+						, price
+						, child_cost
+						, child_cost_total
+						, child_price
+						, baby_cost
+						, baby_cost_total
+						, baby_price
+						, recommend_yn
+						, weekly_deal_yn
+						, use_yn
+						, regist_datetime 
+                 		, regist_user
+					) values (
+						  #{option_id}
+						, #{class_cd}
+						, #{start_air_nm}
+						, #{start_date}
+						, #{start_airport}
+						, #{start_depart_time}
+						, #{start_arrive_time}
+						, #{end_air_nm}
+						, #{end_date}
+						, #{end_airport}
+						, #{end_depart_time}
+						, #{end_arrive_time}
+						, case #{air_extra} when '' then 0 when NULL then 0 else #{air_extra} end
+						, case #{air_tax} when '' then 0 when NULL then 0 else #{air_tax} end
+						, case #{cost} when '' then 0 when NULL then 0 else #{cost} end
+						, case #{cost_total} when '' then 0 when NULL then 0 else #{cost_total} end
+						, case #{price} when '' then 0 when NULL then 0 else #{price} end
+						, case #{child_cost} when '' then 0 when NULL then 0 else #{child_cost} end
+						, case #{child_cost_total} when '' then 0 when NULL then 0 else #{child_cost_total} end
+						, case #{child_price} when '' then 0 when NULL then 0 else #{child_price} end
+						, case #{baby_cost} when '' then 0 when NULL then 0 else #{baby_cost} end
+						, case #{baby_cost_total} when '' then 0 when NULL then 0 else #{baby_cost_total} end
+						, case #{baby_price} when '' then 0 when NULL then 0 else #{baby_price} end
+						, #{recommend_yn}
+						, #{weekly_deal_yn}  
+						, #{use_yn}
+						, date_format(now(), '%Y%m%d%H%i%s')
+                 		, #{regist_user}				
+					)
+	</insert>
+	
+	<update id="update_AirPriceList" parameterType="map">
+			update tb_join_airprice
+				set class_cd          = #{class_cd}
+				  , start_air_nm      = #{start_air_nm}
+				  , start_date        = #{start_date}
+				  , start_airport     = #{start_airport}
+				  , start_depart_time = #{start_depart_time}
+				  , start_arrive_time = #{start_arrive_time}
+				  , end_air_nm        = #{end_air_nm}
+				  , end_date          = #{end_date}
+				  , end_airport       = #{end_airport}
+				  , end_depart_time   = #{end_depart_time}
+				  , end_arrive_time   = #{end_arrive_time}
+				  , air_extra         = case #{air_extra} when '' then 0 when NULL then 0 else #{air_extra} end
+				  , air_tax           = case #{air_tax} when '' then 0 when NULL then 0 else #{air_tax} end
+				  , cost              = case #{cost} when '' then 0 when NULL then 0 else #{cost} end
+				  , cost_total        = case #{cost_total} when '' then 0 when NULL then 0 else #{cost_total} end
+				  , price             = case #{price} when '' then 0 when NULL then 0 else #{price} end
+				  , child_cost        = case #{child_cost} when '' then 0 when NULL then 0 else #{child_cost} end
+				  , child_cost_total  = case #{child_cost_total} when '' then 0 when NULL then 0 else #{child_cost_total} end
+				  , child_price       = case #{child_price} when '' then 0 when NULL then 0 else #{child_price} end
+				  , baby_cost         = case #{baby_cost} when '' then 0 when NULL then 0 else #{baby_cost} end
+				  , baby_cost_total   = case #{baby_cost_total} when '' then 0 when NULL then 0 else #{baby_cost_total} end
+				  , baby_price        = case #{baby_price} when '' then 0 when NULL then 0 else #{baby_price} end
+				  , recommend_yn      = #{recommend_yn}
+				  , weekly_deal_yn    = #{weekly_deal_yn}
+				  , use_yn            = #{use_yn}
+                  , change_datetime   = date_format(now(), '%Y%m%d%H%i%s')
+                  , change_user       = #{change_user}
+			 where price_id           = #{price_id}
+			   and option_id          = #{option_id}
+	</update>
+	
+	<delete id="delete_AirPriceList" parameterType="map">
+			delete 
+              from tb_join_airprice
+             where price_id  = #{price_id}
+               and option_id = #{option_id}
+	</delete>
+	
+	<select id="select_AirPriceList" parameterType="map" resultType="map">
+			select price_id 
+			    , option_id
+				, class_cd
+				, start_air_nm
+				, start_date
+				, start_airport
+				, start_depart_time
+				, start_arrive_time
+				, end_air_nm
+				, end_date
+				, end_airport
+				, end_depart_time
+				, end_arrive_time
+				, air_extra
+				, air_tax
+				, cost
+				, cost_total
+				, price
+				, child_cost
+				, child_cost_total
+				, child_price
+				, baby_cost
+				, baby_cost_total
+				, baby_price
+				, recommend_yn
+				, weekly_deal_yn
+				, use_yn
+			  from tb_join_airprice
+			 where option_id = #{option_id}
+		<if test="s_class_cd != null and s_class_cd != ''">
+			   and class_cd = #{s_class_cd}
+		</if>
+		<if test="s_start_date != null and s_start_date != ''">
+			<![CDATA[ and start_date >= #{s_start_date} ]]>
+		</if>
+		<if test="s_end_date != null and s_end_date != ''">
+  			<![CDATA[ and start_date <= #{s_end_date} ]]>
+  		</if>
+	</select>
+</mapper>

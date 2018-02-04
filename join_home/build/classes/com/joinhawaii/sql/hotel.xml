@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="hotel">
+
+	<select id="select_hotel_list" parameterType="map" resultType="map">
+            select a.hotel_id
+                 , a.hotel_nm_kr
+                 , a.hotel_nm_eng
+                 , a.island_cd
+                 , b.code_name as island_nm
+                 , a.grade_cd
+                 , c.code_name as grade_nm
+                 , a.area_nm
+                 , a.resort_fee
+                 , a.min_sales_price
+                 , a.show_special
+                 , a.recommend_yn
+                 , a.weekly_deal_yn
+                 , a.use_yn
+                 , a.ordering
+              from tb_join_hotel a
+                 , tb_join_code b
+                 , tb_join_code c
+             where a.island_cd 	= b.code and b.code_gubn = '101'
+               and a.grade_cd	= c.code and c.code_gubn = '103'
+             <if test="s_island_cd != null and s_island_cd != ''">
+               and a.island_cd		= #{s_island_cd}
+             </if>
+             <if test="s_grade_cd != null and s_grade_cd != ''">
+               and a.grade_cd 		= #{s_grade_cd}
+             </if>
+             <if test="s_use_yn != null and s_use_yn != ''">
+               and a.use_yn		= #{s_use_yn}
+             </if>
+             <if test="s_hotel_nm != null and s_hotel_nm != ''">
+               and (upper(a.s_hotel_nm_eng) like upper(concat('%', #{s_hotel_nm}, '%')) or a.hotel_nm_kr like '%' #{s_hotel_nm} '%')
+             </if>
+             <if test="s_recommend_yn != null and s_recommend_yn != ''">
+               and a.recommend_yn		= #{s_recommend_yn}
+             </if>
+             <if test="s_weekly_deal_yn != null and s_weekly_deal_yn != ''">
+               and a.weekly_deal_yn		= #{s_weekly_deal_yn}
+             </if>             
+             order by a.use_yn desc
+                    , a.ordering
+             		, b.sort_flag
+                    , a.hotel_nm_eng
+	</select>
+
+	<select id="select_hotel_info" parameterType="map" resultType="map">
+            select a.hotel_id
+                 , a.hotel_nm_kr
+                 , a.hotel_nm_eng
+                 , concat(a.hotel_nm_kr, ' (', a.hotel_id, ')') as hotel_title
+                 , a.island_cd
+                 , b.code_name as island_nm
+                 , a.grade_cd
+                 , c.code_name as grade_nm
+                 , a.area_nm
+                 , a.resort_fee
+                 , a.min_sales_price
+                 , a.show_special
+                 , a.recommend_yn
+                 , a.weekly_deal_yn
+                 , a.use_yn
+                 , a.child_limit
+                 , a.cancel_policy
+                 , a.cancel_able_day
+                 , a.sale_title_1
+                 , a.sale_title_2
+                 , a.porterage
+                 , a.check_in_time
+                 , a.check_out_time
+                 , a.main_picture
+                 , a.wifi_info
+                 , a.parking_info
+                 , a.tel_no
+                 , a.address
+                 , a.promotion_info
+                 , a.weekly_deal_info
+                 , a.default_info
+                 , a.resort_fee_info
+                 , a.hotel_convenience
+                 , a.room_convenience
+                 , a.keyword
+			  from tb_join_hotel a
+                 , tb_join_code b
+                 , tb_join_code c
+             where a.island_cd 	= b.code and b.code_gubn = '101'
+               and a.grade_cd	= c.code and c.code_gubn = '103'
+               and a.hotel_id	= #{hotel_id}     
+	</select>
+	
+	<insert id="insert_Hotel" parameterType="map">
+            insert
+              into tb_join_hotel (
+                   hotel_nm_kr
+                 , hotel_nm_eng
+                 , island_cd
+                 , grade_cd
+                 , area_nm
+                 , resort_fee
+                 , min_sales_price
+				 , show_special
+                 , recommend_yn
+                 , weekly_deal_yn
+                 , use_yn
+                 , child_limit
+                 , cancel_policy
+                 , cancel_able_day
+                 , sale_title_1
+                 , sale_title_2
+                 , porterage
+                 , check_in_time
+                 , check_out_time
+		         <!-- , main_picture -->
+                 , wifi_info
+                 , parking_info
+                 , tel_no
+                 , address
+                 , promotion_info
+                 , weekly_deal_info
+                 , default_info
+                 , resort_fee_info
+                 , hotel_convenience
+                 , room_convenience
+                 , keyword
+                 , regist_datetime 
+                 , regist_user
+            ) values (
+                   #{hotel_nm_kr}
+                 , #{hotel_nm_eng}
+                 , #{island_cd}
+                 , #{grade_cd}
+                 , #{area_nm}
+                 , case #{resort_fee} when '' then 0 when (#{resort_fee} is NULL) then 0 else #{resort_fee} end 
+                 , case #{min_sales_price} when '' then 0 when (#{min_sales_price} is NULL) then 0 else #{min_sales_price} end 
+				 , #{show_special}
+                 , #{recommend_yn}
+                 , #{weekly_deal_yn}
+                 , #{use_yn}
+                 , case #{child_limit} when '' then 0 when (#{child_limit} is NULL) then 0 else #{child_limit} end
+                 , #{cancel_policy}
+                 , case #{cancel_able_day} when '' then 0 when (#{cancel_able_day} is NULL) then 0 else #{cancel_able_day} end
+                 , #{sale_title_1}
+                 , #{sale_title_2}
+                 , case #{porterage} when '' then 0 when (#{porterage} is NULL) then 0 else #{porterage} end
+                 , #{check_in_time}
+                 , #{check_out_time}
+		         <!-- , #{main_picture} -->
+                 , #{wifi_info}
+                 , #{parking_info}
+                 , #{tel_no}
+                 , #{address}
+                 , #{promotion_info}
+                 , #{weekly_deal_info}
+                 , #{default_info}
+                 , #{resort_fee_info}
+                 , #{hotel_convenience}
+                 , #{room_convenience}
+                 , #{keyword}
+                 , date_format(now(), '%Y%m%d%H%i%s')
+                 , #{regist_user}
+            )
+        <selectKey resultType="int" keyProperty="hotel_id" order="AFTER">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	<update id="update_HotelImage" parameterType="map">
+			update tb_join_hotel
+			   set main_picture = #{main_picture}
+			 where hotel_id 	= #{hotel_id}
+	</update>
+	
+	<update id="update_Hotel" parameterType="map">
+			update tb_join_hotel
+			   set hotel_nm_kr        = #{hotel_nm_kr}
+                 , hotel_nm_eng       = #{hotel_nm_eng}
+                 , island_cd          = #{island_cd}
+                 , grade_cd           = #{grade_cd}
+                 , area_nm            = #{area_nm}
+                 , resort_fee         = case #{resort_fee} when '' then 0 else #{resort_fee} end 
+                 , min_sales_price    = case #{min_sales_price} when '' then 0 else #{min_sales_price} end 
+				 , show_special       = #{show_special}
+                 , recommend_yn       = #{recommend_yn}
+                 , weekly_deal_yn     = #{weekly_deal_yn}
+                 , use_yn             = #{use_yn}
+                 , child_limit        = case #{child_limit} when '' then 0 else #{child_limit} end
+                 , cancel_policy      = #{cancel_policy}
+                 , cancel_able_day    = case #{cancel_able_day} when '' then 0 else #{cancel_able_day} end
+                 , sale_title_1       = #{sale_title_1}
+                 , sale_title_2       = #{sale_title_2}
+                 , porterage          = case #{porterage} when '' then 0 else #{porterage} end
+                 , check_in_time      = #{check_in_time}
+                 , check_out_time     = #{check_out_time}
+		         , main_picture       = #{main_picture}
+                 , wifi_info          = #{wifi_info}
+                 , parking_info       = #{parking_info}
+                 , tel_no             = #{tel_no}
+                 , address            = #{address}
+                 , promotion_info     = #{promotion_info}
+                 , weekly_deal_info   = #{weekly_deal_info}
+                 , default_info       = #{default_info}
+                 , resort_fee_info    = #{resort_fee_info}
+                 , hotel_convenience  = #{hotel_convenience}
+                 , room_convenience   = #{room_convenience}
+                 , keyword            = #{keyword}
+                 , change_datetime    = date_format(now(), '%Y%m%d%H%i%s')
+                 , change_user        = #{change_user}
+           where hotel_id 		      = #{hotel_id}
+	</update>
+
+ 	<update id="update_HotelList" parameterType="map">
+            update tb_join_hotel
+               set change_datetime	= date_format(now(), '%Y%m%d%H%i%s')
+                 , change_user		= #{change_user}
+                 , ordering     	= #{ordering}
+                 , recommend_yn     = #{recommend_yn}
+                 , weekly_deal_yn   = #{weekly_deal_yn}
+                 , use_yn           = #{use_yn}                 
+             where hotel_id 		= #{hotel_id}
+ 	</update>
+
+ 	<delete id="delete_Hotel" parameterType="map">
+            delete 
+              from tb_join_hotel
+             where hotel_id 		= #{hotel_id}
+ 	</delete>
+
+
+	<insert id="insert_RoomList" parameterType="map">
+		insert
+			into tb_join_room (
+				  hotel_id
+				, room_nm_kr
+				, room_nm_eng
+				, adult_cnt
+				, child_cnt
+				, extra_price
+				, room_info
+				, room_img_path
+				, ordering
+				, regist_datetime
+				, regist_user
+			) values (
+				  #{hotel_id}
+				, #{room_nm_kr}
+				, #{room_nm_eng}
+				, case #{adult_cnt} when '' then 0 when (#{adult_cnt} is NULL) then 0 else #{adult_cnt} end
+				, case #{child_cnt} when '' then 0 when (#{child_cnt} is NULL) then 0 else #{child_cnt} end
+				, case #{extra_price} when '' then 0 when (#{extra_price} is NULL) then 0 else #{extra_price} end
+				, #{room_info}
+				, #{room_img_path}
+				, case #{ordering} when '' then 0 when (#{ordering} is NULL) then 0 else #{ordering} end
+                , date_format(now(), '%Y%m%d%H%i%s')
+                , #{regist_user}
+            )
+	</insert>
+
+	<update id="update_RoomList" parameterType="map">
+		update tb_join_room
+		   set room_nm_kr    = #{room_nm_kr} 
+		     , room_nm_eng   = #{room_nm_eng}
+		     , room_img_path = #{room_img_path}
+			 , adult_cnt     = case #{adult_cnt} when '' then 0 when (#{adult_cnt} is NULL) then 0 else #{adult_cnt} end
+			 , child_cnt     = case #{child_cnt} when '' then 0 when (#{child_cnt} is NULL) then 0 else #{child_cnt} end
+			 , extra_price   = case #{extra_price} when '' then 0 when (#{extra_price} is NULL) then 0 else #{extra_price} end
+			 , room_info     = #{room_info}
+			 , room_img_path = #{room_img_path}
+			 , ordering      = case #{ordering} when '' then 0 when (#{ordering} is NULL) then 0 else #{ordering} end
+			 , change_datetime = date_format(now(), '%Y%m%d%H%i%s')
+			 , change_user   = #{change_user}
+		where hotel_id 		= #{hotel_id}
+		  and room_id       = #{room_id}
+	</update>
+	
+	<delete id="delete_RoomList" parameterType="map">
+		delete
+		  from tb_join_room
+		 where hotel_id = #{hotel_id}
+		 <if test="room_id != null and room_id != ''">
+		   and room_id = #{room_id}
+		 </if> 
+	</delete>
+
+	<select id="select_RoomList" parameterType="map" resultType="map">
+		select room_id   
+			, hotel_id
+			, room_nm_kr
+			, room_nm_eng
+			, room_img_path
+			, adult_cnt
+			, child_cnt
+			, extra_price
+			, room_info
+			, ordering
+		from tb_join_room
+		where hotel_id = #{hotel_id}
+        order by ordering
+	</select>
+  
+	<insert id="insert_PromotionList" parameterType="map">
+  		insert into tb_join_promotion (
+  				  hotel_id
+  				, promotion_nm_kr
+  				, promotion_nm_eng
+  				, corp_cd
+  				, book_cd
+  				, default_price_yn
+  				, min_stay_day
+  				, free_stay_day
+  				, promotion_info
+  				, sale_start_date
+  				, sale_end_date
+  				, ordering
+  				, regist_datetime
+				, regist_user
+  			) values (
+  				  #{hotel_id}
+  				, #{promotion_nm_kr}
+  				, #{promotion_nm_eng}
+  				, #{corp_cd}
+  				, #{book_cd}
+  				, #{default_price_yn}
+  				, case #{min_stay_day} when '' then 0 when (#{min_stay_day} is NULL) then 0 else #{min_stay_day} end
+  				, case #{free_stay_day} when '' then 0 when (#{free_stay_day} is NULL) then 0 else #{free_stay_day} end
+  				, #{promotion_info}
+  				, #{sale_start_date}
+  				, #{sale_end_date}
+  				, case #{ordering} when '' then 0 when (#{ordering} is NULL) then 0 else #{ordering} end
+  				, date_format(now(), '%Y%m%d%H%i%s')
+                , #{regist_user}
+  			)
+	</insert>
+  
+	<update id="update_PromotionList" parameterType="map">
+  		update tb_join_promotion
+  			set promotion_nm_kr    = #{promotion_nm_kr}
+  				, promotion_nm_eng = #{promotion_nm_eng}
+  				, corp_cd          = #{corp_cd}
+  				, book_cd          = #{book_cd}
+  				, default_price_yn = #{default_price_yn}
+  				, min_stay_day     = case #{min_stay_day} when '' then 0 when (#{min_stay_day} is NULL) then 0 else #{min_stay_day} end
+  				, free_stay_day    = case #{free_stay_day} when '' then 0 when (#{free_stay_day} is NULL) then 0 else #{free_stay_day} end
+  				, promotion_info   = #{promotion_info}
+  				, sale_start_date  = #{sale_start_date}
+  				, sale_end_date    = #{sale_end_date}
+  				, ordering         = case #{ordering} when '' then 0 when (#{ordering} is NULL) then 0 else #{ordering} end
+			 	, change_datetime  = date_format(now(), '%Y%m%d%H%i%s')
+			 	, change_user      = #{change_user}
+		 where hotel_id 		   = #{hotel_id}
+		   and promotion_id		   = #{promotion_id}
+	</update>
+  
+	<delete id="delete_PromotionList" parameterType="map">
+		delete
+		  from tb_join_promotion
+		 where hotel_id = #{hotel_id}
+		 <if test="promotion_id != null and promotion_id != ''">
+		   and promotion_id = #{promotion_id}
+		 </if> 
+	</delete>
+	
+	<select id="select_PromotionList" parameterType="map" resultType="map">
+		select promotion_id
+			 , hotel_id
+  			 , promotion_nm_kr
+  			 , promotion_nm_eng
+  			 , corp_cd
+  			 , book_cd
+  			 , default_price_yn
+  			 , min_stay_day
+  			 , free_stay_day
+  			 , promotion_info
+  			 , sale_start_date
+  			 , sale_end_date
+  			 , ordering
+  		  from tb_join_promotion
+  		 where hotel_id = #{hotel_id}
+  		 order by ordering
+	</select>
+
+	<insert id="insert_PriceList" parameterType="map">
+		insert into tb_join_hotelprice (
+			  hotel_id
+			, promotion_id
+			, room_id
+  			, apply_start_date
+  			, apply_end_date
+  			, breakfast_cd
+  			, resort_fee
+  			, base_price
+  			, sale_price
+  			, sale_start_date
+  			, sale_end_date
+  			, cancel_able_day
+  			, use_yn
+  			, regist_datetime
+  			, regist_user
+  		) values (
+  			  #{hotel_id}
+  			, #{promotion_id}
+			, #{room_id}
+  			, #{apply_start_date}
+  			, #{apply_end_date}
+  			, #{breakfast_cd}
+  			, case #{resort_fee} when '' then 0 when (#{resort_fee} is NULL) then 0 else #{resort_fee} end
+  			, case #{base_price} when '' then 0 when (#{base_price} is NULL) then 0 else #{base_price} end
+  			, case #{sale_price} when '' then 0 when (#{sale_price} is NULL) then 0 else #{sale_price} end
+  			, #{sale_start_date}
+  			, #{sale_end_date}
+  			, case #{cancel_able_day} when '' then 0 when (#{cancel_able_day} is NULL) then 0 else #{cancel_able_day} end
+  			, #{use_yn}
+  			, date_format(now(), '%Y%m%d%H%i%s')
+            , #{regist_user}
+		)
+	</insert>
+	
+	<update id="upate_PriceList" parameterType="map">
+		update tb_join_hotelprice
+			set promotion_id     = #{promotion_id}
+			  , room_id          = #{room_id}
+  			  , apply_start_date = #{apply_start_date}
+  			  , apply_end_date   = #{apply_end_date}
+  			  , breakfast_cd     = #{breakfast_cd}
+  			  , resort_fee       = case #{resort_fee} when '' then 0 when (#{resort_fee} is NULL) then 0 else #{resort_fee} end
+  			  , base_price       = case #{base_price} when '' then 0 when (#{base_price} is NULL) then 0 else #{base_price} end
+  			  , sale_price       = case #{sale_price} when '' then 0 when (#{sale_price} is NULL) then 0 else #{sale_price} end
+  			  , sale_start_date  = #{sale_start_date}
+  			  , sale_end_date    = #{sale_end_date}
+  			  , cancel_able_day  = case #{cancel_able_day} when '' then 0 when (#{cancel_able_day} is NULL) then 0 else #{cancel_able_day} end
+  			  , use_yn           = #{use_yn}
+  			  , change_datetime  = date_format(now(), '%Y%m%d%H%i%s')
+			  , change_user      = #{change_user}
+		 where hotel_id = #{hotel_id}
+		   and price_id = #{price_id}
+	</update>
+
+	<delete id="delete_PriceList" parameterType="map">
+		delete
+		  from tb_join_hotelprice
+		 where hotel_id = #{hotel_id}
+		 <if test="price_id != null and price_id != ''">
+		   and price_id = #{price_id}
+		 </if> 
+	</delete>
+
+	<select id="select_PriceList" parameterType="map" resultType="map">
+  		select a.price_id
+  		    , a.hotel_id
+  			, a.promotion_id
+  			, a.room_id
+  			, b.corp_cd
+  			, a.apply_start_date
+  			, a.apply_end_date
+  			, a.breakfast_cd
+  			, a.resort_fee
+  			, a.base_price
+  			, a.sale_price
+  			, a.sale_start_date
+  			, a.sale_end_date
+  			, a.cancel_able_day
+  			, a.use_yn
+  		  from tb_join_hotelprice a
+  		     , tb_join_promotion b
+  		 where a.hotel_id = #{hotel_id}
+  		   and a.hotel_id = b.hotel_id
+  		   and a.promotion_id = b.promotion_id
+  		 <if test="s_room_id != null and s_room_id != ''">
+  		   and a.room_id = #{s_room_id}
+  		 </if>
+  		 <if test="s_promotion_id != null and s_promotion_id != ''">
+  		   and a.promotion_id = #{s_promotion_id}
+  		 </if>
+  		 <if test="s_apply_start_date != null and s_apply_start_date != ''">
+  		   <![CDATA[
+  		   and a.apply_start_date >= #{s_apply_start_date}
+  		   ]]>
+  		 </if>
+  		 <if test="s_apply_end_date != null and s_apply_end_date != ''">
+  		   <![CDATA[
+  		   and a.apply_end_date <= #{s_apply_end_date}
+  		   ]]>
+  		 </if>
+  		 order by b.ordering
+	</select>
+
+	
+	<insert id="insert_StopSellList" parameterType="map">
+		insert into tb_join_hotelstopsell (
+			  promotion_id
+			, room_id
+			, reg_year
+			, reg_month
+			, reg_day
+			, reg_date
+			, stopsell_cd
+			, regist_datetime
+			, regist_user
+		) values (
+			  #{promotion_id}
+			, #{room_id}
+			, substring(#{reg_date}, 1, 4)
+			, substring(#{reg_date}, 5, 2)
+			, substring(#{reg_date}, 7, 2)
+			, #{reg_date}
+			, #{stopsell_cd}
+			, date_format(now(), '%Y%m%d%H%i%s')
+            , #{regist_user}
+		)
+	</insert>
+	
+	<update id="update_StopSellList" parameterType="map">
+		update tb_join_hotelstopsell
+			set promotion_id     = #{promotion_id}
+			  , room_id          = #{room_id}
+			  , reg_year         = substring(#{reg_date}, 1, 4)
+			  , reg_month        = substring(#{reg_date}, 5, 2)
+			  , reg_day          = substring(#{reg_date}, 7, 2)
+			  , reg_date         = #{reg_date}
+			  , change_datetime  = date_format(now(), '%Y%m%d%H%i%s')
+			  , change_user      = #{change_user}
+		  where stopsell_id      = #{stopsell_id}
+	</update>
+	
+	<delete id="delete_StopSellList" parameterType="map">
+		delete
+		  from tb_join_gallery
+		 where stopsell_id = #{stopsell_id} 
+	</delete>
+	
+	<select id="select_StopSellList" parameterType="map" resultType="map">
+		select a.room_id
+			 , a.hotel_id
+			 , b.promotion_id
+			 , case b.reg_year when '' then #{reg_year} when (b.reg_year is NULL) then #{reg_year} else b.reg_year end as reg_year 
+			 , case b.reg_month when '' then #{reg_month} when (b.reg_month is NULL) then #{reg_month} else b.reg_month end as reg_month ,
+		<foreach collection="daylist" item="item" separator="," index="index">
+			 GROUP_CONCAT(if(b.reg_day = '${item}', b.stopsell_cd, '')) AS stopsell_cd_${item}
+		</foreach>
+		  from tb_join_room a
+			   left outer join tb_join_hotelstopsell b on a.room_id = b.room_id
+		 	   and b.reg_month = #{reg_month}
+		 	   and b.reg_year = #{reg_year}
+		 where a.hotel_id = #{hotel_id}
+		 group by a.room_id, a.hotel_id, b.promotion_id, b.reg_year, b.reg_month
+	</select>
+</mapper>

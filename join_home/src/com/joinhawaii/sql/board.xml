@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="board">
+	<select id="select_board_list" parameterType="map" resultType="java.util.HashMap">
+			select a.board_id, a.board_name, a.new_period, a.hit_count, a.image_yn, a.admin_yn
+                 , a.reply_yn, a.comment_yn, a.use_yn, a.init_date, a.init_user, a.up_date
+                 , a.up_user
+              from board_master a
+             where 1=1
+          <if test="board_id != null">
+               and a.board_id = #{board_id}
+          </if>
+          <if test="use_yn != null">
+               and a.use_yn = #{use_yn}
+          </if>
+	</select>
+	
+	<select id="select_word_list" parameterType="map" resultType="hashmap">
+            select a.word_id, a.board_id, a.word_num, a.sort, a.depth, a.subject, a.comment_count
+                 , a.password, a.open_yn, a.content, a.count, a.author_name, a.email, a.telephone
+                 , a.ip_addr, a.use_yn, date_format(a.init_date,'%m/%d') as init_date
+                 , a.init_user, a.up_date, a.up_user
+                 <![CDATA[, if((to_days(now()) - to_days(a.init_date)) <= b.new_period,'Y','N')	as new_yn]]>
+                 , if(a.count >= b.hit_count,'Y','N')	as hit_yn
+              from word_master a, board_master b
+             where a.board_id = b.board_id
+          <if test="board_id != null">
+               and a.board_id = #{board_id}
+          </if>
+          <if test="word_id != null">
+               and a.word_id = #{word_id}
+          </if>
+          <if test="search_word != null and search_word != ''">
+	          <choose>
+	          	<when test="search_col == 'subject'">
+	          		and a.subject like CONCAT('%', #{search_word}, '%')
+	          	</when>
+	          	<when test="search_col == 'content'">
+	          		and a.content like CONCAT('%', #{search_word}, '%')
+	          	</when>
+	          	<when test="search_col == 'author_name'">
+	          		and a.author_name like CONCAT('%', #{search_word}, '%')
+	          	</when>
+	          </choose>
+          </if>
+          	 order by word_num desc, sort
+          <if test="start_num != null and end_num != null">
+		     limit #{start_num, jdbcType=INTEGER}, #{end_num, jdbcType=INTEGER}
+		  </if>
+	</select>
+
+  	<select id="select_word_total" parameterType="map" resultType="int">
+         select count(a.board_id) as total_count
+           from word_master a, board_master b
+          where a.board_id		= b.board_id
+       <if test="board_id != null">
+            and a.board_id = #{board_id}
+       </if>
+       <if test="word_id != null">
+            and a.word_id = #{word_id}
+       </if>
+       <if test="search_word != null and search_word != ''">
+        <choose>
+        	<when test="search_col == 'subject'">
+        		and a.subject like #{search_word}
+        	</when>
+        	<when test="search_col == 'content'">
+        		and a.content like #{search_word}
+        	</when>
+        	<when test="search_col == 'author_name'">
+        		and a.author_name like #{search_word}
+        	</when>
+        </choose>
+       </if>       
+  	</select>
+  	
+  	<select id="select_word_prev_next" parameterType="map" resultType="map">
+  		select max(word_id) as word_id, 'Prev' as gb, ifnull(subject,'이전 게시글이 없습니다.') as subject 
+  		  from word_master
+ 	     where board_id = #{board_id}
+ 	     <![CDATA[  and word_id < #{word_id} ]]>
+		 union all
+		select min(word_id) as word_id, 'Next' as gb, ifnull(subject,'다음 게시글이 없습니다.') as subject 
+		  from word_master
+ 		 where board_id = #{board_id}
+ 		 <![CDATA[  and word_id > #{word_id} ]]>
+  	</select>
+  	
+  	<select id="select_word_detail" parameterType="map" resultType="map">
+         select a.word_id, a.board_id, a.word_num, a.sort, a.depth
+              , a.subject, a.comment_count, a.password, a.open_yn
+              , a.content, a.count, a.author_name, a.email
+              , a.telephone, a.ip_addr, a.use_yn
+              <![CDATA[, date_format(a.init_date,'%Y.%m.%d <br> %h:%i') as init_date ]]>
+              , a.img_path_01, a.img_path_02, a.img_path_03, a.img_path_04, a.img_path_05
+              , a.img_path_06, a.init_user, a.up_date, a.up_user, b.board_name
+              , b.image_yn, b.admin_yn, b.reply_yn, b.comment_yn
+           from word_master a, board_master b
+          where a.board_id	= b.board_id
+       <if test="word_id != null">
+            and a.word_id = #{word_id}
+       </if>
+  	</select>
+  	
+  	<insert id="insert_word" parameterType="map">
+  		<selectKey resultType="int" keyProperty="word_num" order="BEFORE">
+            <choose> 
+            <when test="depth == 0">
+            select	ifnull(max(word_num),0)+1 as word_num
+			  from word_master
+             where board_id	= #{board_id}
+            </when>
+            <otherwise>
+            select #{word_num} as word_num
+            </otherwise>
+			</choose>
+		</selectKey>
+  		insert into word_master ( board_id, word_num, sort, depth, subject, password
+                 , open_yn, content, author_name, email, telephone, ip_addr
+                 , img_path_01, img_path_02, img_path_03, img_path_04, img_path_05
+                 , img_path_06, img_name_01, img_name_02, img_name_03, img_name_04
+                 , img_name_05, img_name_06, init_date, init_user, up_date, up_user )
+            values (#{board_id}, #{word_num}, #{sort}, #{depth}, #{subject}, #{password}
+                 , #{open_yn}, #{content}, #{author_name}, #{email}, #{telephone}
+                 , #{ip_addr}, #{img_path_01, jdbcType=VARCHAR}, #{img_path_02, jdbcType=VARCHAR}
+                 , #{img_path_03, jdbcType=VARCHAR}, #{img_path_04, jdbcType=VARCHAR}
+                 , #{img_path_05, jdbcType=VARCHAR}, #{img_path_06, jdbcType=VARCHAR}
+                 , #{img_name_01, jdbcType=VARCHAR}, #{img_name_02, jdbcType=VARCHAR}
+                 , #{img_name_03, jdbcType=VARCHAR}, #{img_name_04, jdbcType=VARCHAR}
+                 , #{img_name_05, jdbcType=VARCHAR}, #{img_name_06, jdbcType=VARCHAR}
+                 , now(), #{init_user}, now(), #{up_user} )
+  	</insert>
+  	
+  	<update id="update_word" parameterType="map">
+		update word_master
+		   set up_date = now()
+			 <if test="up_user != null">, up_user = #{up_user}</if>
+		     <if test="subject != null">, subject = #{subject}</if>
+		     <if test="password != null">, password = #{password}</if>
+		     <if test="open_yn != null">, open_yn = #{open_yn}</if>
+		     <if test="content != null">, content = #{content}</if>
+		     <if test="author_name != null">, author_name = #{author_name}</if>
+		     <if test="email != null">, email = #{email}</if>
+		     <if test="telephone != null">, telephone = #{telephone}</if>
+		 where word_id = #{word_id}
+  	</update>
+  	
+  	<delete id="delete_word" parameterType="string">
+  		delete from word_master
+  		      where word_id = #{word_id}
+  	</delete>
+  	
+  	<update id="update_view_count" parameterType="string">
+		update word_master
+		   set count = count + 1
+		 where word_id = #{word_id}
+		   <![CDATA[and ip_addr <> #{ip_addr}]]>
+    </update>
+</mapper>

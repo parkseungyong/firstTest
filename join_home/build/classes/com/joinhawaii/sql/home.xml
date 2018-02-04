@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="home">
+
+  <select id="select_hotel_list" parameterType="map" resultType="map">
+             select a.hotel_id
+			    , a.hotel_kor_name
+				, a.hotel_eng_name
+			    , a.land_code
+			    , b.code_name as hotel_grade
+			    , a.addr
+			    , a.tel_no
+			    , a.fax_no
+			    , a.location
+			    , a.img_path_00
+			    , a.hotel_cond
+			    , a.hotel_info
+			    , a.hotel_room
+			    , a.hotel_envi
+			    , a.hotel_etc
+			    , a.hotel_pic
+			    , '02' as pmenu_id
+			 from hotel_master a left outer join code_master b on b.code = a.hotel_grade and b.code_gubn = '004'
+			where a.use_yn = 'Y'
+		<if test="land_code != null and land_code != ''">
+			 and a.land_code = #{land_code}
+		</if>
+		<if test="room_type != null and room_type != ''">
+			 and a.room_type = #{room_type}
+		</if>
+		<if test="hotel_id != null and hotel_id != ''">			 
+			 and a.hotel_id = #{hotel_id}
+		</if>
+		<if test="main_yn != null and main_yn != ''">			 
+			 and a.main_yn = #{main_yn}
+		</if>
+			order by a.sort_flag
+			       , a.hotel_kor_name
+  </select>
+
+  <select id="select_hotel_min_sales_price" parameterType="string" resultType="int">
+           select ifnull(min(b.sales_price),0) as min_sales_price
+			 from room_master a
+			    , room_price b
+			where a.room_id = b.room_id
+              and a.hotel_id = #{hotel_id}
+              and a.use_yn = 'Y'
+              and date_format(now(), '%Y%m%d') between b.from_date and b.to_date
+  </select>
+
+  <select id="select_room_price_list" parameterType="map" resultType="map">
+            select a.room_id
+                 , a.hotel_id
+                 , a.room_name
+                 , a.room_type
+				 , case when a.room_desc = '' or a.room_desc is null then '일반요금' else trim(a.room_desc) end as room_desc
+                 , a.person_cnt
+				 , a.sort_flag
+				 , a.use_yn
+				 , a.init_date
+				 , a.init_user
+				 , a.up_date
+				 , a.up_user
+				 , b.hotel_eng_name
+        <![CDATA[
+				 , case when c.from_date < date_format(now(),'%Y%m%d') then date_format(now(),'%Y%m%d')
+		]]>
+				        else c.from_date end as from_date
+				 , c.to_date
+				 , c.cost
+				 , c.sales_price
+				 , c.b2b_price
+              from room_master a
+                 , room_price c
+                 , hotel_master b
+             where a.hotel_id 		= b.hotel_id
+               and a.room_id = c.room_id
+			   and a.use_yn			= 'Y'
+        <![CDATA[
+               and c.to_date >= date_format(now(),'%Y%m%d')
+        ]]>
+		<if test="room_id != null and room_id != ''">               
+              and a.room_id		= #{room_id}
+		</if>
+		<if test="hotel_id != null and hotel_id != ''">              
+              and a.hotel_id 		= #{hotel_id}
+		</if>
+		<if test="room_type != null and room_type != ''">              
+              and a.room_type		= #{room_type}
+		</if>
+		<if test="land_code != null and land_code != ''">              
+              and b.land_code		= #{land_code}
+		</if>
+		<if test="hotel_eng_name != null and hotel_eng_name != ''">              
+              and upper(b.hotel_eng_name)	like '%' #{hotel_eng_name} '%'
+		</if>
+             order by case when a.room_desc = '' then 1 else 0 end
+                    , lpad(a.sort_flag,4,'0')
+                    , c.from_date
+  </select>
+
+  <select id="select_enjoy_list" parameterType="map" resultType="map">
+            select a.enjoy_id
+                 , a.enjoy_name
+                 , a.location
+                 , a.take_time
+                 , a.kid_cond
+                 , a.transfer
+                 , a.img_path_00
+                 , a.enjoy_pic
+                 , a.main_yn
+			    , '03' as pmenu_id
+              from enjoy_master a
+             where a.use_yn = 'Y'
+		<if test="est_yn != null and est_yn != ''">              
+              and a.est_yn = #{est_yn}
+		</if>
+		<if test="enjoy_gubn != null and enjoy_gubn != ''"> 
+              and a.enjoy_gubn = #{enjoy_gubn}
+		</if>
+		<if test="enjoy_id != null and enjoy_id != ''"> 
+              and a.enjoy_id = #{enjoy_id}
+		</if>
+		<if test="main_yn != null and main_yn != ''">               
+			  and a.main_yn = #{main_yn}
+		</if>
+             order by lpad(a.sort_flag,4,'0')
+  </select>
+
+  <select id="select_enjoy_detail" parameterType="map" resultType="map">
+            select a.enjoy_id
+                 , a.enjoy_name
+                 , a.location
+                 , a.take_time
+                 , a.kid_cond
+                 , a.transfer
+  		<![CDATA[
+                 , case when a.enjoy_info = '<BR>' then '' else a.enjoy_info end as enjoy_info
+                 , case when a.enjoy_include = '<BR>' then '' else a.enjoy_include end as enjoy_include
+                 , case when a.enjoy_exclude = '<BR>' then '' else a.enjoy_exclude end as enjoy_exclude
+                 , case when a.enjoy_prepare = '<BR>' then '' else a.enjoy_prepare end as enjoy_prepare
+                 , case when a.enjoy_detail = '<BR>' then '' else a.enjoy_detail end as enjoy_detail
+                 , case when a.enjoy_schedule = '<BR>' then '' else a.enjoy_schedule  end as enjoy_schedule
+                 , case when a.use_limit = '<BR>' then '' else a.use_limit  end as use_limit
+         ]]>
+                 , a.img_path_00
+                 , a.enjoy_pic
+                 , a.main_yn
+			     , '03' as pmenu_id
+			     <!-- 
+				 , b.price_name
+				 , b.adult_cost
+				 , b.adult_sales_price
+				 , b.adult_b2b_price
+				 , b.kid_cost
+				 , b.kid_sales_price
+				 , b.kid_b2b_price
+               from enjoy_master a left outer join enjoy_price b on a.enjoy_id = b.enjoy_id  -->
+              from enjoy_master a
+             where a.use_yn = 'Y'
+		<if test="est_yn != null and est_yn != ''">              
+              and a.est_yn = #{est_yn}
+		</if>
+		<if test="enjoy_gubn != null and enjoy_gubn != ''">               
+              and a.enjoy_gubn = #{enjoy_gubn}
+		</if>
+		<if test="enjoy_id != null and enjoy_id != ''">               
+              and a.enjoy_id = #{enjoy_id}
+		</if>
+		<if test="main_yn != null and main_yn != ''">               
+			  and a.main_yn = #{main_yn}
+		</if>
+             order by a.sort_flag
+  </select>
+
+  <select id="select_enjoy_price_list" parameterType="map" resultType="map">
+            select b.price_name
+				 , b.adult_cost
+				 , b.adult_sales_price
+				 , b.adult_b2b_price
+				 , b.kid_cost
+				 , b.kid_sales_price
+				 , b.kid_b2b_price
+              from enjoy_price b
+             where b.enjoy_id = #{enjoy_id}
+             order by b.price_id
+  </select>
+  
+  <select id="select_car_list" parameterType="string" resultType="map">
+            select a.car_name
+                 , a.person_count
+                 , a.price_usd
+                 , a.options
+                 , a.car_include
+                 , a.package
+                 , a.img_path_00
+              from car_master a
+             where a.use_yn = 'Y'
+			   and a.rent_company = #{rent_company}
+			  order by lpad(a.sort_flag,4,'0')
+  </select>
+
+</mapper>

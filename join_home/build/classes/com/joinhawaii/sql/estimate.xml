@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="estimate">
+	<insert id="insert_req_master" parameterType="map">
+		insert into req_master(	req_gubn, req_dt, email_addr, password, customer_name
+				, phone_no, title, travel_gubn, travel_type, travel_etc, start_dt
+				, req_info, res_info, req_status, init_date, init_user, up_date, up_user
+				, prod_id, adult_count, child_count, travel_priod ) values (
+				#{req_gubn, jdbcType=CHAR}, date_format(now(),'%Y%m%d')
+				, #{email_addr, jdbcType=VARCHAR}, #{password, jdbcType=VARCHAR}
+				, #{customer_name}, #{phone_no, jdbcType=VARCHAR}
+				, #{title, jdbcType=VARCHAR}, #{travel_gubn, jdbcType=CHAR}
+				, #{travel_type, jdbcType=CHAR}, #{travel_etc, jdbcType=VARCHAR}
+				, #{start_dt, jdbcType=VARCHAR}, #{req_info, jdbcType=VARCHAR}
+				, #{res_info, jdbcType=VARCHAR}, '1'
+				, now(), #{init_user, jdbcType=VARCHAR}, now(), #{up_user, jdbcType=VARCHAR}
+				, #{prod_id}, #{adult_count}, #{child_count}, #{travel_priod})
+	</insert>
+	
+	<select id="select_estimate_confirm_usr" parameterType="map" resultType="int">
+		select count(1)
+		  from req_master
+		 where customer_name = #{customer_name}
+		   and phone_no = #{phone_no}
+		   and init_user = 'Guest'
+		   <!-- and req_status = '2' -->
+	</select>
+	
+	<select id="select_estimate_confirm" parameterType="map" resultType="map">
+	<!-- 
+		select a.req_dt, a.customer_name, b.issue_dt, b.est_no, b.title, b.travel_start_dt, b.travel_end_dt, req_status
+  		  from req_master a, est_master b
+ 		 where a.req_id = b.req_id -->
+		select date_format(a.req_dt, '%Y.%m.%d') req_dt, a.customer_name, b.est_no, b.title, b.travel_start_dt, b.travel_end_dt, a.req_status
+		       , c.prod_name, d.code_name req_status_name, c.prod_id, b.est_state, e.code_name est_state_name
+		       , c.prod_gubn, c.location
+  		  from req_master a left outer join est_master b on a.req_id = b.req_id
+  		                    left outer join code_master e on b.est_state = e.code and e.code_gubn = '109'
+  		       , yeosi_prod_master c, code_master d
+ 		 where a. prod_id = c.prod_id
+ 		   and a.req_status = d.code
+ 		   and d.code_gubn = '120' 		 
+ 		   and a.init_user = #{init_user}
+	</select>
+	
+	<select id="select_estimate_req" parameterType="map" resultType="map">
+		select date_format(a.req_dt, '%Y.%m.%d') req_dt, a.customer_name, b.est_no, b.title, b.travel_start_dt, b.travel_end_dt, a.req_status
+		       , c.prod_name, d.code_name req_status_name, c.prod_id, b.est_state, e.code_name est_state_name
+		       , c.prod_gubn, c.location
+  		  from req_master a left outer join est_master b on a.req_id = b.req_id
+  		                    left outer join code_master e on b.est_state = e.code and e.code_gubn = '109'
+  		       , yeosi_prod_master c, code_master d
+ 		 where a. prod_id = c.prod_id
+ 		   and a.req_status = d.code
+ 		   and d.code_gubn = '120'
+ 		   and a.customer_name = #{customer_name}
+ 		   and a.phone_no = #{phone_no} 
+	</select>	
+</mapper>	
